@@ -142,7 +142,7 @@ class SQLJoin {
      */
     function getResult() {
         $q = $this->getQuery();
-        $r = SQL::__handleQuery($q) or die($q . '<br />' . mysql_error());
+        $r = SQL::__handleQuery($q);
         
         $return = array();
         while ($i = mysql_fetch_array($r, MYSQL_ASSOC))
