@@ -80,7 +80,6 @@ class SQLJoin {
      */
     function __parseTableFieldKey($key) {
         preg_match('/[(0-9)*]\#/sU', $key, $return);
-
         return str_replace($return[0], $this->joinedTables[substr($return[0], 0, 1)]['hash'] . '.', $key);
     }
     
@@ -106,7 +105,6 @@ class SQLJoin {
      * @return string
      */
     function __parseJoinTable(&$data) {
-        
         $join = '';
         switch ($data['join']) {
             case SQLJOIN_LEFT:
