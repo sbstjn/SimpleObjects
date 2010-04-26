@@ -1,0 +1,12 @@
+== SimpleObjects Source
+
+A bunch of PHP objects making everyday code easier and comfortable. 
+
+== Getting Started
+
+Add the following lines to your code to use SimpleObjects:
+
+	<?php
+	// Define absolute path to SimpleObjects
+	define('PATH_SIMPLEOBJECTS', '/your/absolute/path/to/SimpleObjects/');
+	require_once PATH_SIMPLEOBJECTS . 'init.php';
