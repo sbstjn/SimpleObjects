@@ -92,7 +92,7 @@ class SQLJoin {
         foreach ($this->returnAllList as $table)
             $items[] = $table;
 
-        foreach ($this->returnList as $key => $value)
+        foreach ((array)$this->returnList as $key => $value)
             $items[] = SQL::__parseSelectItem($this->__parseTableFieldKey($key, true), $value);
 
         return $items;
