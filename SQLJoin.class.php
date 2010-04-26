@@ -53,12 +53,14 @@ class SQLJoin {
      */
     function select() {
         $args = func_get_args();
-        
+                
         foreach ($args as $arg) {
             if (is_array($arg))
                 $this->returnList[$this->__parseTableFieldKey(array_shift(array_keys($arg)))] = array_shift($arg);
             elseif (stristr($arg, '*'))
                 $this->returnAllList[] = $this->__parseTableFieldKey($arg);
+            else
+                $this->returnList[$this->__parseTableFieldKey($arg)] = $this->returnList[$this->__parseTableFieldKey($arg)]; 
         }
 
     }
@@ -89,7 +91,7 @@ class SQLJoin {
     function __getSelection() { 
         $items = array();
 
-        foreach ($this->returnAllList as $table)
+        foreach ((array)$this->returnAllList as $table)
             $items[] = $table;
 
         foreach ((array)$this->returnList as $key => $value)
@@ -140,7 +142,7 @@ class SQLJoin {
      */
     function getResult() {
         $q = $this->getQuery();
-        $r = SQL::__handleQuery($q);
+        $r = SQL::__handleQuery($q) or die($q . '<br />' . mysql_error());
         
         $return = array();
         while ($i = mysql_fetch_array($r, MYSQL_ASSOC))
