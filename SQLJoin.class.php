@@ -140,6 +140,7 @@ class SQLJoin {
      */
     function getResult() {
         $q = $this->getQuery();
+        G::debug($q);
         $r = SQL::__handleQuery($q);
         
         $return = array();
