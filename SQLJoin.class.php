@@ -35,14 +35,32 @@ class SQLJoin {
      * @param string $index
      * @param string $onField
      * @param string $join
+     *
+     * OR
+     *
+     * @param string $tableName
+     * @param array $onField
+     * @param string $join
+     *
      */
     function addTable($tableName, $index = '', $onField = '', $join = '') {
-        $this->joinedTables[] = array(
+        // Hack
+        if (!is_array($index)) {
+            $where = array($index => $onField);
+        } else {
+            $where = $index;
+            $join  = $onField;
+        }
+    
+        $this->joinedTables[] = $tmp = array(
             'name'     => $tableName,
-            'hash'     => substr(md5(count($this->joinedTables) . $tableName), 0, 8),
+            'hash'     => substr(md5(count($this->joinedTables) . $tableName), 0, 8) . '_' . $tableName,
             'join'     => $join,
-            'index'    => $index,
-            'onField'  => $onField);
+            'where'    => $where);
+            
+        
+            if (SQL_DEBUG == 1)
+                G::debug($tmp);
     }
     
     /**
@@ -54,15 +72,20 @@ class SQLJoin {
     function select() {
         $args = func_get_args();
                 
-        foreach ($args as $arg) {
+        foreach ($args as $key => $arg) {
             if (is_array($arg))
                 $this->returnList[$this->__parseTableFieldKey(array_shift(array_keys($arg)))] = array_shift($arg);
             elseif (stristr($arg, '*'))
                 $this->returnAllList[] = $this->__parseTableFieldKey($arg);
             else
-                $this->returnList[$this->__parseTableFieldKey($arg)] = $this->returnList[$this->__parseTableFieldKey($arg)]; 
+                $this->returnList[$this->__parseTableFieldKey($arg)] = substr($arg, 2); 
         }
 
+    }
+    
+    function offset($start, $limit = 500) {   
+        $this->sqlStart = $start;
+        $this->sqlLimit = $limit;
     }
     
     /**
@@ -72,6 +95,14 @@ class SQLJoin {
     function where($array) {
         foreach ($array as $key => $value)
             $this->where[$this->__parseTableFieldKey($key)] = $value;
+    }
+    
+    /**
+     * Apend custom where string
+     * @param string $string
+     */
+    function addCustomWhere($string) {
+        $this->customWhere = $string;
     }
     
     /**
@@ -111,8 +142,25 @@ class SQLJoin {
                 $join = ' LEFT ';
                 break;
         }
-    
-        return $join . 'JOIN `' . $data['name'] . '` AS `' . $data['hash'] . '` ON `' . $data['hash'] . '`.`' . $data['index'] . '` = `'. $this->joinedTables[0]['hash'] . '`.`' . $data['onField'] . '`';
+        
+        $join = $join . 'JOIN `' . $data['name'] . '` AS `' . $data['hash'] . '` ON ';
+        $joinOn = array();
+
+        foreach ($data['where'] as $key => $value) {
+        
+            $joinStri = '`' . $data['hash'] . '`.`' . $key . '` = ';
+            
+            if (!stristr($value, '#')) {
+                $joinStri = $joinStri . (is_numeric($value) ? '\''.$value.'\'' : '`'. $this->joinedTables[0]['hash'] . '`.`' . $value . '`');
+            } else {
+                list($index, $field) = explode('#', $value);
+                $joinStri = $joinStri . '`'. $this->joinedTables[$index]['hash'] . '`.`' . $field . '`';
+            }
+
+            $joinOn[] = $joinStri;
+        }
+        
+        return $join . implode(' AND ', $joinOn);
     }
     
     /**
@@ -131,7 +179,34 @@ class SQLJoin {
             $join[] = $this->__parseJoinTable($t);
         }
         
-        return SQL::__parseWhere($q . implode(" ", $join), $this->where);
+        $query = SQL::__parseWhere($q . implode(" ", $join), $this->where);
+        
+        if ($this->customWhere != '') {
+            $query = $query . $this->customWhere;
+        }
+        
+        if ($this->customOrder != '') {
+            $query = $query . ' ORDER BY ' . $this->customOrder;
+        }
+        
+        if ($this->sqlStart && $this->sqlLimit)
+            $query = $query . ' LIMIT ' . $this->sqlStart . ', ' . $this->sqlLimit;
+        
+        return $query;
+    }
+    
+    function addOrder($order) {
+        $this->customOrder = $order;
+    }
+    
+    function run() {
+        $q = $this->getQuery();
+        
+        $this->result = SQL::__handleQuery($q);
+    }
+    
+    function getNext() {
+        return mysql_fetch_array($this->result, MYSQL_ASSOC);
     }
     
     /**
@@ -141,7 +216,6 @@ class SQLJoin {
     function getResult() {
         $q = $this->getQuery();
         $r = SQL::__handleQuery($q);
-        
         $return = array();
         while ($i = mysql_fetch_array($r, MYSQL_ASSOC))
             $return[] = $i;
