@@ -6,7 +6,7 @@
  * @package SimpleObjects
  * @author Sebastian Müller
  * @version 0.1
- * @link http://github.com/hazelcode/SimpleObjects
+ * @link http://github.com/sebastianmueller/SimpleObjects
  */
  
 define('SQLJOIN_LEFT', 'SQLJOIN_LEFT'); 

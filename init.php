@@ -13,7 +13,7 @@
  * @package SimpleObjects
  * @author Sebastian Müller
  * @version 0.1
- * @link http://github.com/hazelcode/SimpleObjects
+ * @link http://github.com/sebastianmueller/SimpleObjects
  */
 
 require_once PATH_SIMPLEOBJECTS . 'SQLJoin.class.php'; 
